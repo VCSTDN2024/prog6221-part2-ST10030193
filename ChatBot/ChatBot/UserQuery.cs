@@ -12,7 +12,7 @@ namespace ChatBot
     {
         //Dictionary that will have all responses available
         private ReadOnlyDictionary<string, BotResponse> botResponses;
-        
+
         private UserProfile user = new UserProfile();
         private string name { get; set; }
         private string question { get; set; }
@@ -79,11 +79,7 @@ namespace ChatBot
                             break;
                         }
                     }
-                    if (!foundResponse)
-                    {
-                        Console.WriteLine("Sorry, I don't have any tips on that topic.");
-                        foundResponse = true;
-                    }
+                    
                 }
                 else
                 {
@@ -258,7 +254,7 @@ namespace ChatBot
 
         string AnalyzeSentiment(string message)
         {
-            var positiveWords = new[] { "good", "great", "happy", "awesome", "love", "fantastic", "amazing","excited" };
+            var positiveWords = new[] { "good", "great", "happy", "awesome", "love", "fantastic", "amazing", "excited" };
             var negativeWords = new[] { "bad", "sad", "angry", "hate", "terrible", "awful", "upset" };
 
             message = message.ToLower();
@@ -283,9 +279,9 @@ namespace ChatBot
             input = input.ToLower();
 
             // Look for interest (e.g. "I love painting")
-            if (input.Contains("i love") || input.Contains("i like") || input.Contains("i enjoy")||input.Contains("interest"))
+            if (input.Contains("i love") || input.Contains("i like") || input.Contains("i enjoy") || input.Contains("interest"))
             {
-                string[] triggers = { "i love", "i like", "i enjoy","interest"};
+                string[] triggers = { "i love", "i like", "i enjoy", "interest" };
                 foreach (var trigger in triggers)
                 {
                     if (input.Contains(trigger))
@@ -314,6 +310,7 @@ namespace ChatBot
         {
             TryUpdateUserProfile(input);
             string sentiment = AnalyzeSentiment(input);
+            bool responded = false;
 
             if (input.ToLower().Contains("exit"))
             {
@@ -322,35 +319,54 @@ namespace ChatBot
                 return;
             }
 
+            // Sentiment + Interest
             if (!string.IsNullOrEmpty(user.Interest))
             {
                 if (sentiment == "positive")
-                    Console.WriteLine($"😊 Great to hear! Doing more with {user.Interest} must be fun.");
+                {
+                    Console.WriteLine($"Great to hear! Doing more with {user.Interest} must be fun.");
+                    responded = true;
+                }
                 else if (sentiment == "negative")
-                    Console.WriteLine($"😟 Sorry you’re feeling down. Maybe {user.Interest} can cheer you up.");
-                else
-                    Console.WriteLine($"🤔 How about spending some time with {user.Interest}?");
+                {
+                    Console.WriteLine($"Sorry you’re feeling down. Maybe {user.Interest} can cheer you up.");
+                    responded = true;
+                }
             }
             else
             {
                 if (sentiment == "positive")
-                    Console.WriteLine("😊 Nice to hear you’re doing well!");
+                {
+                    Console.WriteLine("Nice to hear you’re doing well!");
+                    responded = true;
+                }
                 else if (sentiment == "negative")
-                    Console.WriteLine("😔 I’m here if you want to talk.");
-                else
-                    Console.WriteLine("🤖 Tell me what you like or how you’re feeling.");
+                {
+                    Console.WriteLine("I’m here if you want to talk.");
+                    responded = true;
+                }
             }
 
-            if (!string.IsNullOrEmpty(user.FavouriteTopic) && r.Next(2) == 0) // 50% chance to remind
+            // Randomly mention favourite topic
+            if (!string.IsNullOrEmpty(user.FavouriteTopic) && r.Next(2) == 0)
             {
-                Console.WriteLine($"📚 Remember, your favourite topic is {user.FavouriteTopic}!");
+                Console.WriteLine($"Remember, your favourite topic is {user.FavouriteTopic}!");
+                responded = true;
             }
 
-            conversationFlow(); // Your existing method for random prompts
+            // Fallback error message
+            if (!responded)
+            {
+                Console.WriteLine("I'm not sure I understand. Can you try rephrasing or enter 'ASK' to view the topics menu?");
+            }
+
+            conversationFlow(); // Continue with the chat
         }
+
 
 
     }
 
 }
+
 
